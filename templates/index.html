@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoVoice Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-dark: #111927;
+            --bg-darker: #0a101e;
+            --primary: #6d5acd;
+            --primary-light: #8a7ee0;
+            --primary-dark: #4e3ca9;
+            --accent: #00ccb1;
+            --text-light: #e6e9f0;
+            --text-dim: #9ba3b4;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(226, 232, 240, 0.1);
+            --user-msg-bg: rgba(109, 90, 205, 0.2);
+            --assistant-msg-bg: rgba(30, 41, 59, 0.6);
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark), var(--bg-darker));
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 3D Floating Elements (Background) */
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .element {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            border-radius: 8px;
+            filter: blur(2px);
+            opacity: 0.1;
+            transform-style: preserve-3d;
+            animation: float 15s infinite linear;
+        }
+        
+        .element:nth-child(odd) {
+            background: linear-gradient(135deg, var(--accent), var(--primary-light));
+        }
+        
+        .element:nth-child(1) {
+            top: 10%;
+            left: 10%;
+            width: 80px;
+            height: 80px;
+            animation-duration: 20s;
+            animation-delay: 0s;
+        }
+        
+        .element:nth-child(2) {
+            top: 20%;
+            right: 15%;
+            width: 100px;
+            height: 100px;
+            animation-duration: 25s;
+            animation-delay: 1s;
+        }
+        
+        .element:nth-child(3) {
+            bottom: 15%;
+            left: 20%;
+            width: 70px;
+            height: 70px;
+            animation-duration: 18s;
+            animation-delay: 2s;
+        }
+        
+        .element:nth-child(4) {
+            bottom: 25%;
+            right: 25%;
+            animation-duration: 22s;
+            animation-delay: 3s;
+        }
+        
+        .element:nth-child(5) {
+            top: 50%;
+            left: 5%;
+            width: 90px;
+            height: 90px;
+            animation-duration: 24s;
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateZ(-50px) translateX(0) translateY(0) rotate(0deg);
+            }
+            25% {
+                transform: translateZ(0) translateX(100px) translateY(-50px) rotate(90deg);
+            }
+            50% {
+                transform: translateZ(50px) translateX(50px) translateY(100px) rotate(180deg);
+            }
+            75% {
+                transform: translateZ(0) translateX(-50px) translateY(50px) rotate(270deg);
+            }
+            100% {
+                transform: translateZ(-50px) translateX(0) translateY(0) rotate(360deg);
+            }
+        }
+        
+        /* Main Container */
+        .container {
+            width: 90%;
+            max-width: 900px;
+            height: 85vh;
+            max-height: 800px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            z-index: 10;
+            animation: pulse-glow 8s infinite alternate;
+        }
+        
+        @keyframes pulse-glow {
+            0% {
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            }
+            100% {
+                box-shadow: 0 8px 32px rgba(109, 90, 205, 0.3);
+            }
+        }
+        
+        /* Header Section */
+        .header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(13, 20, 35, 0.6);
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 600;
+            background: linear-gradient(to right, var(--primary-light), var(--accent));
+            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text;
+            margin-bottom: 5px;
+            display: inline-block;
+            position: relative;
+        }
+        
+        .header h1::after {
+            content: '';
+            position: absolute;
+            width: 50px;
+            height: 3px;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text;
+            border-radius: 3px;
+        }
+        
+        .header p {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            max-width: 80%;
+            margin: 20px auto 0;
+        }
+        
+        /* Sound Wave Animation */
+        .sound-wave {
+            height: 30px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .sound-wave.active {
+            opacity: 1;
+        }
+        
+        .sound-wave .bar {
+            background: var(--primary);
+            height: 3px;
+            width: 3px;
+            border-radius: 3px;
+            animation: sound-wave-animation 1s infinite ease-in-out alternate;
+        }
+        
+        .sound-wave .bar:nth-child(1) { animation-delay: 0.0s; }
+        .sound-wave .bar:nth-child(2) { animation-delay: 0.1s; }
+        .sound-wave .bar:nth-child(3) { animation-delay: 0.2s; }
+        .sound-wave .bar:nth-child(4) { animation-delay: 0.3s; }
+        .sound-wave .bar:nth-child(5) { animation-delay: 0.4s; }
+        .sound-wave .bar:nth-child(6) { animation-delay: 0.5s; }
+        .sound-wave .bar:nth-child(7) { animation-delay: 0.4s; }
+        .sound-wave .bar:nth-child(8) { animation-delay: 0.3s; }
+        .sound-wave .bar:nth-child(9) { animation-delay: 0.2s; }
+        .sound-wave .bar:nth-child(10) { animation-delay: 0.1s; }
+        
+        @keyframes sound-wave-animation {
+            0% {
+                height: 3px;
+            }
+            100% {
+                height: 15px;
+            }
+        }
+        
+        /* Conversation Area */
+        .conversation-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            background: var(--bg-darker);
+            position: relative;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-dark) var(--bg-darker);
+        }
+        
+        .conversation-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .conversation-area::-webkit-scrollbar-thumb {
+            background-color: var(--primary-dark);
+            border-radius: 3px;
+        }
+        
+        .conversation-area::-webkit-scrollbar-track {
+            background-color: var(--bg-darker);
+        }
+        
+        /* Grid Pattern Background */
+        .conversation-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(109, 90, 205, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(109, 90, 205, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: -1;
+        }
+        
+        /* Messages */
+        .user-message, .assistant-message {
+            padding: 14px 18px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            max-width: 75%;
+            word-wrap: break-word;
+            line-height: 1.5;
+            position: relative;
+            transition: all 0.3s ease;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-message {
+            background: var(--user-msg-bg);
+            margin-left: auto;
+            text-align: right;
+            border-top-right-radius: 2px;
+            box-shadow: 0 4px 12px rgba(109, 90, 205, 0.1);
+            border: 1px solid rgba(109, 90, 205, 0.2);
+        }
+        
+        .assistant-message {
+            background: var(--assistant-msg-bg);
+            border-top-left-radius: 2px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .user-message::before,
+        .assistant-message::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            transform: translateY(-50%) rotate(45deg);
+        }
+        
+        .user-message::before {
+            right: 15px;
+            background: var(--user-msg-bg);
+            border-top: 1px solid rgba(109, 90, 205, 0.2);
+            border-right: 1px solid rgba(109, 90, 205, 0.2);
+        }
+        
+        .assistant-message::before {
+            left: 15px;
+            background: var(--assistant-msg-bg);
+            border-top: 1px solid var(--glass-border);
+            border-left: 1px solid var(--glass-border);
+        }
+        
+        /* Message Timestamps */
+        .message-time {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            margin-top: 5px;
+            display: block;
+        }
+        
+        /* Control Area */
+        .control-area {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(13, 20, 35, 0.7);
+            border-top: 1px solid var(--glass-border);
+            position: relative;
+        }
+        
+        .control-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(109, 90, 205, 0.3), 
+                rgba(0, 204, 177, 0.3), 
+                transparent
+            );
+        }
+        
+        /* Microphone Button */
+        .mic-button-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            transform-style: preserve-3d;
+            perspective: 800px;
+        }
+        
+        .mic-button {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            font-size: 24px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 10px 20px rgba(0, 0, 0, 0.2),
+                0 0 0 10px rgba(109, 90, 205, 0.1),
+                0 0 0 20px rgba(109, 90, 205, 0.05);
+            transform: translateZ(0) rotateX(0) rotateY(0);
+        }
+        
+        .mic-button:hover {
+            background: var(--primary-light);
+            transform: translateZ(20px) rotateX(5deg) rotateY(5deg);
+            box-shadow: 
+                5px 15px 25px rgba(0, 0, 0, 0.3),
+                0 0 0 10px rgba(109, 90, 205, 0.15),
+                0 0 0 20px rgba(109, 90, 205, 0.07);
+        }
+        
+        .mic-button.recording {
+            background: #e63946;
+            animation: recording-pulse 1.5s infinite alternate;
+            box-shadow: 
+                0 10px 25px rgba(230, 57, 70, 0.4),
+                0 0 0 10px rgba(230, 57, 70, 0.1),
+                0 0 0 20px rgba(230, 57, 70, 0.05);
+        }
+        
+        @keyframes recording-pulse {
+            0% {
+                transform: translateZ(0) scale(1);
+                box-shadow: 
+                    0 10px 25px rgba(230, 57, 70, 0.4),
+                    0 0 0 10px rgba(230, 57, 70, 0.1),
+                    0 0 0 20px rgba(230, 57, 70, 0.05);
+            }
+            100% {
+                transform: translateZ(20px) scale(1.1);
+                box-shadow: 
+                    0 15px 30px rgba(230, 57, 70, 0.6),
+                    0 0 0 15px rgba(230, 57, 70, 0.2),
+                    0 0 0 30px rgba(230, 57, 70, 0.1);
+            }
+        }
+        
+        /* Ripple Effect */
+        .mic-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.5s ease;
+        }
+        
+        .mic-button:active::after {
+            transform: translate(-50%, -50%) scale(1.5);
+            opacity: 0;
+        }
+        
+        /* Button Icon */
+        .mic-button i {
+            position: relative;
+            z-index: 2;
+            font-size: 28px;
+        }
+        
+        /* Status Text */
+        .status-text {
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            font-weight: 500;
+            height: 24px;
+            transition: all 0.3s ease;
+        }
+        
+        /* Typing Animation for Processing */
+        .typing {
+            display: inline-flex;
+            align-items: center;
+            height: 24px;
+        }
+        
+        .typing .dot {
+            width: 6px;
+            height: 6px;
+            margin: 0 1px;
+            background-color: var(--text-dim);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        /* Responsive Design */
+        @media screen and (max-width: 768px) {
+            .container {
+                width: 95%;
+                height: 90vh;
+            }
+            
+            .header h1 {
+                font-size: 1.6rem;
+            }
+            
+            .header p {
+                font-size: 0.85rem;
+            }
+            
+            .user-message, .assistant-message {
+                max-width: 85%;
+                padding: 12px 15px;
+            }
+            
+            .mic-button-container {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .floating-elements {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating 3D Elements -->
+    <div class="floating-elements">
+        <div class="element"></div>
+        <div class="element"></div>
+        <div class="element"></div>
+        <div class="element"></div>
+        <div class="element"></div>
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>NeoVoice Assistant</h1>
+            <p>Click the microphone and speak your command</p>
+            
+            <!-- Sound Wave Animation -->
+            <div class="sound-wave" id="soundWave">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+        </div>
+        
+        <div class="conversation-area" id="conversationArea">
+            <div class="assistant-message">
+                Hello! I'm your voice assistant. How can I help you today?
+                <span class="message-time">Just now</span>
+            </div>
+        </div>
+        
+        <div class="control-area">
+            <div class="mic-button-container">
+                <button class="mic-button" id="micButton">
+                    <i class="fas fa-microphone"></i>
+                </button>
+            </div>
+            <div class="status-text" id="statusText"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const micButton = document.getElementById('micButton');
+            const statusText = document.getElementById('statusText');
+            const conversationArea = document.getElementById('conversationArea');
+            const soundWave = document.getElementById('soundWave');
+            
+            let recognition;
+            let isRecording = false;
+            
+            // Add 3D tilt effect to mic button
+            const micButtonContainer = document.querySelector('.mic-button-container');
+            micButtonContainer.addEventListener('mousemove', (e) => {
+                if (!isRecording) {
+                    const rect = micButtonContainer.getBoundingClientRect();
+                    const x = e.clientX - rect.left - rect.width / 2;
+                    const y = e.clientY - rect.top - rect.height / 2;
+                    
+                    // Calculate rotation values based on mouse position
+                    const rotateY = x * 0.1;
+                    const rotateX = -y * 0.1;
+                    
+                    micButton.style.transform = `translateZ(10px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                }
+            });
+            
+            micButtonContainer.addEventListener('mouseleave', () => {
+                if (!isRecording) {
+                    micButton.style.transform = 'translateZ(0) rotateX(0) rotateY(0)';
+                }
+            });
+            
+            // Initialize speech recognition
+            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                
+                recognition.onstart = function() {
+                    isRecording = true;
+                    micButton.classList.add('recording');
+                    micButton.innerHTML = '<i class="fas fa-stop"></i>';
+                    statusText.textContent = 'Listening...';
+                    soundWave.classList.add('active');
+                };
+                
+                recognition.onresult = function(event) {
+                    const command = event.results[0][0].transcript;
+                    addMessageToConversation('user', command);
+                    
+                    statusText.innerHTML = `<div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+                    soundWave.classList.remove('active');
+                    
+                    // Send to server for processing
+                    fetch('/process-voice', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ command: command }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        addMessageToConversation('assistant', data.response);
+                        // Text to speech
+                        speakResponse(data.response);
+                        statusText.textContent = '';
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        statusText.textContent = 'Error processing command';
+                        setTimeout(() => {
+                            statusText.textContent = '';
+                        }, 3000);
+                    });
+                };
+                
+                recognition.onend = function() {
+                    isRecording = false;
+                    micButton.classList.remove('recording');
+                    micButton.innerHTML = '<i class="fas fa-microphone"></i>';
+                    soundWave.classList.remove('active');
+                    
+                    if (statusText.textContent === 'Listening...') {
+                        statusText.textContent = 'No speech detected';
+                        setTimeout(() => {
+                            statusText.textContent = '';
+                        }, 3000);
+                    }
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error', event.error);
+                    statusText.textContent = 'Error: ' + event.error;
+                    isRecording = false;
+                    micButton.classList.remove('recording');
+                    micButton.innerHTML = '<i class="fas fa-microphone"></i>';
+                    soundWave.classList.remove('active');
+                    
+                    setTimeout(() => {
+                        statusText.textContent = '';
+                    }, 3000);
+                };
+            } else {
+                micButton.disabled = true;
+                statusText.textContent = 'Speech recognition not supported in this browser';
+            }
+            
+            // Toggle recording
+            micButton.addEventListener('click', function() {
+                if (isRecording) {
+                    recognition.stop();
+                } else {
+                    recognition.start();
+                }
+            });
+            
+            // Add message to conversation area with timestamp
+            function addMessageToConversation(sender, message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = sender === 'user' ? 'user-message' : 'assistant-message';
+                
+                // Add message text
+                messageDiv.textContent = message;
+                
+                // Add timestamp
+                const timestamp = document.createElement('span');
+                timestamp.className = 'message-time';
+                timestamp.textContent = 'Just now';
+                messageDiv.appendChild(timestamp);
+                
+                conversationArea.appendChild(messageDiv);
+                conversationArea.scrollTop = conversationArea.scrollHeight;
+            }
+            
+            // Text to speech with animation
+            function speakResponse(text) {
+                if ('speechSynthesis' in window) {
+                    soundWave.classList.add('active');
+                    
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.onend = function() {
+                        soundWave.classList.remove('active');
+                    };
+                    
+                    window.speechSynthesis.speak(utterance);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
